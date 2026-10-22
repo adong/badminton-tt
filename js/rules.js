@@ -57,9 +57,10 @@
   };
   // The computer friends. speed: running speed; react: seconds before it moves; err: chance a shot goes in the net or
   // out, growing by errUp a hit once the rally is longer than errAt; smash / drop: how often it tries them; aim: 'you'
-  // hits it back near the other player (friendly), 'away' places it where they aren't; whiff: frames of timing noise.
+  // hits it back near the other player (friendly), 'away' places it where they aren't, 'mix' does both; whiff: frames of
+  // timing noise; leave: how often it lets a shuttle that's going out drop.
   const LEVELS = {
-    froggy: { leave: 0.6, speed: 3.9, react: 0.34, err: 0.1, errUp: 0.012, errAt: 6, smash: 0.06, drop: 0.12, aim: 'you', whiff: 3, short: 0.1, serve: [1.1, 1.8] },
+    froggy: { leave: 0.6, speed: 4.2, react: 0.3, err: 0.06, errUp: 0.01, errAt: 7, smash: 0.12, drop: 0.18, aim: 'mix', whiff: 3, short: 0.1, serve: [1.1, 1.8] },
     foxy: { leave: 0.95, speed: 4.7, react: 0.2, err: 0.06, errUp: 0.008, errAt: 8, smash: 0.5, drop: 0.32, aim: 'away', whiff: 2, short: 0.35, serve: [0.8, 1.4] },
     pal: { leave: 0.9, speed: 4.8, react: 0.2, err: 0.05, errUp: 0.006, errAt: 9, smash: 0.4, drop: 0.2, aim: 'away', whiff: 2, short: 0.2, serve: [0.8, 1.3] },
     // a stand-in for a kid at the keys, for the headless check: slow to react, sloppy timing, random shots
@@ -711,8 +712,9 @@
     const sp = SHOTS[shot];
     let aim = null;
     const at = Math.abs(foe.x);
-    if (L.aim === 'you') aim = clamp(at, sp.d[0], sp.d[1]);
-    else if (L.aim === 'away') aim = at > (sp.d[0] + sp.d[1]) / 2 ? sp.d[0] + 0.1 : sp.d[1] - 0.1;
+    const how = L.aim === 'mix' ? (M.rand() < 0.6 ? 'you' : 'away') : L.aim;
+    if (how === 'you') aim = clamp(at, sp.d[0], sp.d[1]);
+    else if (how === 'away') aim = at > (sp.d[0] + sp.d[1]) / 2 ? sp.d[0] + 0.1 : sp.d[1] - 0.1;
     // mistakes, more of them as the rally goes on
     const pErr = L.err + Math.max(0, M.rally - L.errAt) * L.errUp;
     const err = M.rand() < pErr ? (M.rand() < 0.6 ? 'net' : 'long') : '';
@@ -780,10 +782,13 @@
       if (maxRange > 22) fail(`physics: a hit went ${maxRange.toFixed(1)} m (a shuttle can't)`);
       // a 1/60 s step and a 1/600 s step land in nearly the same place
       const coarse = { x: -4, y: 2.5, vx: 20, vy: 8, landed: false, netted: false, netY: null }, fine = Object.assign({}, coarse);
-      while (!coarse.landed) fly(coarse, 1 / 60);
-      while (!fine.landed) fly(fine, 1 / 600);
+      for (let k = 0; k < 60 * 30 && !coarse.landed; k++) fly(coarse, 1 / 60);
+      for (let k = 0; k < 600 * 30 && !fine.landed; k++) fly(fine, 1 / 600);
+      if (!coarse.landed || !fine.landed || !Number.isFinite(coarse.x + fine.x)) fail('physics: a 1/60 s or 1/600 s flight never came down');
       if (Math.abs(coarse.x - fine.x) > 0.25) fail(`physics: time step changes the landing by ${Math.abs(coarse.x - fine.x).toFixed(2)} m`);
       out.physics = { launches, maxRange: +maxRange.toFixed(2), terminal: +vt.toFixed(2), stepError: +Math.abs(coarse.x - fine.x).toFixed(3) };
+      // everything after this flies the shuttle: with broken physics it would only crawl to its time limits
+      if (fails.length) throw new Error('stopped after the physics part');
 
       // 2. the solver: every shot from anywhere a player can reach it lands in the other court, over the net
       let shots = 0, solved = 0;
@@ -915,7 +920,8 @@
       }
       out.buddy = { calls, returned };
     } catch (e) {
-      fail('threw: ' + (e && e.stack ? e.stack.split('\n').slice(0, 3).join(' | ') : e));
+      if (e && e.message === 'stopped after the physics part') out.skipped = e.message;
+      else fail('threw: ' + (e && e.stack ? e.stack.split('\n').slice(0, 3).join(' | ') : e));
     } finally {
       SAB = '';
     }

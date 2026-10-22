@@ -1,6 +1,7 @@
-/* TT Go: the CPU friends. The kit has neither yet, so this game adds them as roster entries on the kit's bear head:
+/* TT Badminton: the CPU friends, copied from TT Go. The kit has neither yet, so this adds them as roster entries on the
+   kit's bear head:
      🐸 Froggy (🐣 EASY): green, with two big eyes on top of his head and a wide smile.
-     🦊 Foxy (🔥 NORMAL, and the lessons): orange fur, a white muzzle, pointy ears with dark tips, a bushy tail
+     🦊 Foxy (🔥 NORMAL): orange fur, a white muzzle, pointy ears with dark tips, a bushy tail
         (the same Foxy as TT Chess).
    Kit.people.build is wrapped so anything with look.fox or look.frog gets the extras, the menu portraits too.
    Move these into the kit when another game wants them. */
