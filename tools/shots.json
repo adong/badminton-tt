@@ -1,0 +1,4 @@
+[
+  { "label": "prefs", "js": "localStorage.setItem('claudeGames.muted', '1'); localStorage.removeItem('claudeGames.lang'); ['mode','level','me'].forEach(k => localStorage.removeItem('ttBadminton.' + k)); location.reload(); 'reload'", "wait": 4500 },
+  { "label": "title", "js": "game.hold(true); game.step(3.2); game.state.phase", "wait": 900, "shot": "screenshot" }
+]
