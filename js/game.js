@@ -109,7 +109,7 @@
   function startMatch(o, attract) {
     clearViews();
     G.attract = !!attract;
-    M = R.create({ mode: o.mode, level: o.level, ids: o.ids, ctrl: o.ctrl, server: Math.random() < 0.5 ? 0 : 1 });
+    M = R.create({ mode: o.mode, level: o.level, ids: o.ids, ctrl: o.ctrl, server: G.server !== undefined ? G.server : Math.random() < 0.5 ? 0 : 1 });
     G.humans = M.p.filter((p) => p.ctrl === 'human').map((p) => p.i);
     for (const p of M.p) {
       const { entry, person } = buildPerson(p.id, p.side, 1);
@@ -392,7 +392,8 @@
     return lp ? lp.z * 0.5 : 0;
   }
 
-  function render(dt) {
+  // draw: false updates everything (poses, effects, camera) without drawing the frame (the slow part in a software GL)
+  function render(dt, draw = true) {
     if (!M) return;
     for (const v of views) renderPlayer(v, dt);
     for (let s = 0; s < 2; s++) if (buds[s]) renderBud(s, dt);
@@ -406,7 +407,7 @@
     stage.update(dt, G.time);
     updateCamera(dt);
     if (!G.attract) updateLive();
-    renderer.render(scene, camera);
+    if (draw) renderer.render(scene, camera);
   }
 
   function renderPlayer(v, dt) {
@@ -509,7 +510,8 @@
     camera.aspect = w / h;
     // fit the whole hall's width with room for the kit's buttons on the left, and the height of a clear
     const tan = Math.tan((camera.fov * PI) / 360);
-    const dw = 8.9 / (tan * camera.aspect), dh = 4.3 / tan;
+    // (a phone held upright gets a closer look: just past the back lines)
+    const dw = (camera.aspect < 0.8 ? 7.4 : 8.9) / (tan * camera.aspect), dh = 4.3 / tan;
     cam.dist = Math.max(dw, dh);
     camera.updateProjectionMatrix();
   }
@@ -577,9 +579,8 @@
     const me = i !== undefined ? M.p[i] : null;
     const b = me ? M.bud[me.side] : null;
     const n = b && b.on && b.phase !== 'bye' ? b.returns : 0;
-    const badge = $('budCount');
     const txt = n ? '×' + n : '';
-    if (badge.textContent !== txt) badge.textContent = txt;
+    for (const badge of [$('budCount'), $('budBtnCount')]) if (badge.textContent !== txt) badge.textContent = txt;
     $('budBtn').classList.toggle('on', n > 0);
     $('budChip').classList.toggle('on', n > 0);
     // "press F to serve" over a kid who is holding the shuttle
@@ -617,7 +618,10 @@
   }
 
   function toast(text, cls) {
+    // the same line twice in a row (call him twice quickly) shows once
+    if ([...$('toasts').children].some((c) => c.dataset.en === text)) return;
     const el = document.createElement('div');
+    el.dataset.en = text;
     el.className = 'toast ' + (cls || '');
     el.textContent = text;
     $('toasts').appendChild(el);
@@ -849,13 +853,14 @@
     },
     get M() { return M; },
     G,
-    // Advance `seconds` of game time right now, drawing every frame (works while the pane's rAF is throttled).
-    step(seconds = 1) {
+    // Advance `seconds` of game time right now (works while the pane's rAF is throttled). Every frame is updated;
+    // only the last is drawn, unless drawAll.
+    step(seconds = 1, drawAll = false) {
       G.testing = true;
       const n = Math.max(1, Math.round(seconds * 60));
       for (let i = 0; i < n; i++) {
         advance(1 / 60);
-        render(1 / 60);
+        render(1 / 60, drawAll || i === n - 1);
       }
       return this.state;
     },
@@ -867,6 +872,7 @@
       if (o.mode) G.mode = o.mode;
       if (o.level) G.level = o.level;
       if (o.me) G.me = o.me;
+      G.server = o.server; // who serves first (random when left out)
       startGame();
       return this.state;
     },

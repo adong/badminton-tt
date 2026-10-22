@@ -192,6 +192,8 @@
   }
   .budbtn img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; }
   .budbtn small { position: absolute; bottom: -14px; left: 50%; translate: -50% 0; padding: 3px 7px; border-radius: 999px; background: var(--ink); white-space: nowrap; }
+  #budBtnCount { position: absolute; top: -8px; right: -8px; min-width: 30px; height: 30px; padding: 0 6px; border-radius: 15px; display: grid; place-items: center; font: 400 15px/1 var(--display); color: var(--ink); background: var(--yellow); border: 3px solid var(--ink); }
+  #budBtnCount:empty { display: none; }
   .budbtn.on { border-color: var(--yellow); box-shadow: 0 6px 0 var(--ink), 0 0 24px rgba(255, 212, 0, 0.95); }
   @media (max-height: 460px) {
     .tb { width: 74px; height: 74px; font-size: 32px; }
@@ -289,10 +291,24 @@
   #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #27a06a; font-family: var(--display); font-size: 28px; letter-spacing: 2px; padding: 24px; text-align: center; }
   .rotate { display: none; position: fixed; left: 50%; bottom: 14px; translate: -50% 0; padding: 8px 14px; border-radius: 999px; background: rgba(20, 18, 31, 0.75); font-weight: 800; font-size: 13px; pointer-events: none; white-space: nowrap; }
   @media (orientation: portrait) and (max-width: 700px) {
-    body.playing .rotate { display: block; bottom: auto; top: 46%; }
+    body.playing .rotate { display: block; bottom: auto; top: 30%; }
+    /* a narrow phone held upright: the jump button sits on top of swing, the brother above them, the names go */
+    .tr { flex-direction: column; align-items: center; gap: 10px; }
+    .tb { width: 80px; height: 80px; font-size: 34px; }
+    .tb.mv { width: 84px; }
+    .tb.sw { width: 100px; height: 100px; font-size: 44px; }
+    .budbtn { width: 76px; height: 76px; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 216px); right: max(30px, env(safe-area-inset-right)); }
+    .budbtn img { width: 58px; height: 58px; }
+    .nm { display: none; }
+    .chip { display: none; }
+    body.playing #toasts { bottom: 128px; right: 108px; align-items: flex-start; }
+    body.playing .toast { font-size: 14px; }
+    /* the kit's ? and A文 buttons move up into the empty sky, off the court's back corner */
+    #kit-help-btn { top: 118px !important; }
+    #kit-lang-btn { top: 166px !important; }
+    #kit-sound-btn { top: 214px !important; }
     .faces img { width: 40px; height: 40px; border-radius: 12px; }
     .pts { min-width: 46px; height: 46px; font-size: 28px; border-radius: 14px; }
-    .nm { font-size: 13px; }
     .who { display: none; }
     .bars { gap: 6px; }
     .pb { gap: 6px; }
@@ -367,7 +383,7 @@
     <button class="tb mv" data-act="left" aria-label="Run left">◀</button>
     <button class="tb mv" data-act="right" aria-label="Run right">▶</button>
   </div>
-  <button id="budBtn" class="tb budbtn" data-act="call" aria-label="Call your brother"><img alt=""><small>TOMMY</small></button>
+  <button id="budBtn" class="tb budbtn" data-act="call" aria-label="Call your brother"><img alt=""><small>TOMMY</small><b id="budBtnCount"></b></button>
   <div class="tr">
     <button class="tb jp" data-act="jump">⤒<small>JUMP</small></button>
     <button class="tb sw" data-act="swing">🏸<small>SWING</small></button>

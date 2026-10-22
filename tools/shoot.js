@@ -39,7 +39,10 @@ const VK = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 1
     ws.onmessage = (m) => {
       const d = JSON.parse(m.data);
       if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); }
-      if (d.method === 'Runtime.exceptionThrown') logs.push('EXC ' + JSON.stringify(d.params.exceptionDetails.exception && d.params.exceptionDetails.exception.description));
+      if (d.method === 'Runtime.exceptionThrown') {
+        const x = d.params.exceptionDetails;
+        logs.push('EXC ' + ((x.exception && x.exception.description) || x.text) + (x.url ? ` (${x.url.split('/').pop()}:${x.lineNumber + 1})` : ''));
+      }
       if (d.method === 'Runtime.consoleAPICalled' && d.params.type === 'error') logs.push('ERR ' + d.params.args.map((a) => a.value || a.description).join(' '));
     };
     const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
@@ -73,10 +76,11 @@ const VK = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 1
         await send('Input.dispatchKeyEvent', { type: 'keyUp', key, code, windowsVirtualKeyCode: VK[key] || (key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0) });
       }
       if (s.hold) {
-        const vk = VK[s.hold.key] || 0;
-        await send('Input.dispatchKeyEvent', { type: 'keyDown', key: s.hold.key, code: s.hold.key, windowsVirtualKeyCode: vk });
+        const k = s.hold.key, one = k.length === 1;
+        const vk = VK[k] || (one ? k.toUpperCase().charCodeAt(0) : 0), code = one ? 'Key' + k.toUpperCase() : k;
+        await send('Input.dispatchKeyEvent', { type: 'keyDown', key: k, code, windowsVirtualKeyCode: vk });
         await sleep(s.hold.ms);
-        await send('Input.dispatchKeyEvent', { type: 'keyUp', key: s.hold.key, code: s.hold.key, windowsVirtualKeyCode: vk });
+        await send('Input.dispatchKeyEvent', { type: 'keyUp', key: k, code, windowsVirtualKeyCode: vk });
       }
       if (s.wait) await sleep(s.wait);
       if (s.shot) {

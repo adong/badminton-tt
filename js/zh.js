@@ -64,6 +64,6 @@
   L.rule(/^(.+) GOT IT!$/, (m, n) => `${L.t(n)} 接到啦！`);
   L.rule(/^(.+) GOT IT! (\d+) MORE$/, (m, n, k) => `${L.t(n)} 接到啦！还有 ${k} 球`);
   // who plays whom, under the title buttons
-  L.rule(/^1 PLAYER: (.+?) vs (.+?) · 2 PLAYERS: (.+?) vs (.+)$/, (m, a, b, c, d) => `单人：${vs(a)} 对 ${vs(b)} · 双人：${vs(c)} 对 ${vs(d)}`);
   const vs = (s) => s.split(' + ').map((x) => x.replace(/^(\S+)/, (n) => L.t(n))).join(' 和 ');
+  L.rule(/^1 PLAYER: (.+?) vs (.+?) · 2 PLAYERS: (.+?) vs (.+)$/, (m, a, b, c, d) => `单人：${vs(a)} 对 ${vs(b)} · 双人：${vs(c)} 对 ${vs(d)}`);
 })();

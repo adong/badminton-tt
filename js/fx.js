@@ -179,7 +179,9 @@
 
   function wordSprite(text, color, size) {
     const [c, g] = makeCanvas(512, 160);
-    g.font = `${size || 92}px ${Kit.gfx.FONT}`;
+    let px = size || 92;
+    g.font = `${px}px ${Kit.gfx.FONT}`;
+    while (px > 40 && g.measureText(text).width > 480) g.font = `${(px -= 4)}px ${Kit.gfx.FONT}`; // long words shrink to fit
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.lineJoin = 'round';

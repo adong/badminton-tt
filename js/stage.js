@@ -142,9 +142,13 @@
       sg.fillText(String(a), 130, 140);
       sg.fillText(String(b), 382, 140);
       sg.fillStyle = '#ffffff';
-      sg.font = `30px ${FONT}`;
-      sg.fillText((names && names[0]) || '', 130, 44);
-      sg.fillText((names && names[1]) || '', 382, 44);
+      [0, 1].forEach((k) => {
+        const txt = (names && names[k]) || '';
+        let size = 30;
+        sg.font = `${size}px ${FONT}`;
+        while (size > 14 && sg.measureText(txt).width > 222) sg.font = `${(size -= 2)}px ${FONT}`;
+        sg.fillText(txt, k ? 382 : 130, 44);
+      });
       scoreTex.needsUpdate = true;
     }
     drawScore(0, 0, ['', '']);
